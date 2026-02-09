@@ -27,7 +27,7 @@ import os
 import logging
 import unittest
 from decimal import Decimal
-from service.models import Product, Category, db
+from service.models import Product, Category, db, DataValidationError
 from service import app
 from tests.factories import ProductFactory
 
@@ -104,3 +104,172 @@ class TestProductModel(unittest.TestCase):
     #
     # ADD YOUR TEST CASES HERE
     #
+
+    def test_read_a_product(self):
+        """ It should Read correctly a product """
+        product = ProductFactory()
+        app.logger.critical(product)
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        newProduct = Product.find(product.id)
+        self.assertEqual(product.id, newProduct.id)
+        self.assertEqual(product.name, newProduct.name)
+        self.assertEqual(product.description, newProduct.description)
+        self.assertEqual(product.price, newProduct.price)
+        self.assertEqual(product.available, newProduct.available)
+        self.assertEqual(product.category, newProduct.category)
+
+    def test_update_a_product(self):
+        """ It should Update correctly a product """
+        products = Product.all()
+        product = ProductFactory()
+        app.logger.critical(product)
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        app.logger.critical(product)
+        product.description = "Updated Description"
+        previousId = product.id
+        product.update()
+        self.assertEqual(product.id, previousId)
+        self.assertEqual(product.description, "Updated Description")
+        products = Product.all()
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].id, product.id)
+        self.assertEqual(products[0].description, product.description)
+
+    def test_update_a_product_ex(self):
+        """ It should throw an Exception updating a product """
+        product = ProductFactory()
+        app.logger.critical(product)
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        app.logger.critical(product)
+        product.id = None
+        self.assertRaises(DataValidationError, product.update)
+
+    def test_delete_a_product(self):
+        """ It should Delete correctly a product """
+        product = ProductFactory()
+        app.logger.critical(product)
+        product.id = None
+        product.create()
+        products = Product.all()
+        self.assertEqual(len(products), 1)
+        product.delete()
+        products = Product.all()
+        self.assertEqual(len(products), 0)
+
+    def test_list_all_products(self):
+        """ It should List all the Products """
+        products = Product.all()
+        self.assertEqual(len(products), 0)
+        for _ in range(5):
+            product = ProductFactory()
+            product.id = None
+            product.create()
+        products = Product.all()
+        self.assertEqual(len(products), 5)
+
+    def test_find_product_by_name(self):
+        """ It should Find a Product using its name """
+        for _ in range(5):
+            product = ProductFactory()
+            product.id = None
+            product.create()
+        products = Product.all()
+        firstName = products[0].name
+        manualCount = 0
+        for i in range(5):
+            if (products[i].name == firstName):
+                manualCount = manualCount + 1
+        listSameName = Product.find_by_name(firstName)
+        self.assertEqual(listSameName.count(), manualCount)
+        for i in range(listSameName.count()):
+            self.assertEqual(listSameName[i].name, firstName)
+
+    def test_find_product_by_availability(self):
+        """ It should Find a Product using its availability """
+        for _ in range(10):
+            product = ProductFactory()
+            product.id = None
+            product.create()
+        products = Product.all()
+        firstAvailability = products[0].available
+        manualCount = 0
+        for i in range(10):
+            if (products[i].available == firstAvailability):
+                manualCount = manualCount + 1
+        listSameAvailability = Product.find_by_availability(firstAvailability)
+        self.assertEqual(listSameAvailability.count(), manualCount)
+        for i in range(listSameAvailability.count()):
+            self.assertEqual(listSameAvailability[i].available, firstAvailability)
+
+    def test_find_product_by_category(self):
+        """ It should Find a Product using its category """
+        for _ in range(10):
+            product = ProductFactory()
+            product.id = None
+            product.create()
+        products = Product.all()
+        firstCategory = products[0].category
+        manualCount = 0
+        for i in range(10):
+            if (products[i].category == firstCategory):
+                manualCount = manualCount + 1
+        listSameCategory = Product.find_by_category(firstCategory)
+        self.assertEqual(listSameCategory.count(), manualCount)
+        for i in range(listSameCategory.count()):
+            self.assertEqual(listSameCategory[i].category, firstCategory)
+
+    def test_find_product_by_price(self):
+        """ It should Find a Product using its price """
+        for _ in range(10):
+            product = ProductFactory()
+            product.id = None
+            product.create()
+        products = Product.all()
+        firstPrice = products[0].price
+        manualCount = 0
+        for i in range(10):
+            if (products[i].price == firstPrice):
+                manualCount = manualCount + 1
+        listSamePrice = Product.find_by_price(firstPrice)
+        self.assertEqual(listSamePrice.count(), manualCount)
+        for i in range(listSamePrice.count()):
+            self.assertEqual(listSamePrice[i].price, firstPrice)
+
+    def test_find_product_by__string_price(self):
+        """ It should Find a Product using a string price """
+        for _ in range(10):
+            product = ProductFactory()
+            product.id = None
+            product.create()
+        products = Product.all()
+        firstPrice = products[0].price
+        manualCount = 0
+        for i in range(10):
+            if (products[i].price == firstPrice):
+                manualCount = manualCount + 1
+        listSamePrice = Product.find_by_price(str(firstPrice))
+        self.assertEqual(listSamePrice.count(), manualCount)
+        for i in range(listSamePrice.count()):
+            self.assertEqual(listSamePrice[i].price, firstPrice)
+
+    def test_ex_on_deserialize_available_not_bool(self):
+        """ It should Find a Product using a string price """
+        product = ProductFactory()
+        product.create()
+        product2 = product.serialize()
+        product2["available"] = "ciao"
+        self.assertRaises(DataValidationError, product.deserialize, product2)
+
+    def test_ex_on_deserialize_id_not_valid(self):
+        """ It should Find a Product using a string price """
+        product = ProductFactory()
+        product.create()
+        product2 = product.serialize()
+        product2["category"] = "ExCategory"
+        self.assertRaises(DataValidationError, product.deserialize, product2)
