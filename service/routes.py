@@ -125,17 +125,14 @@ def list_products():
         app.logger.info("Find by available: %s", available)
         products = Product.find_by_availability(available)
 
-
-
-
     for product in products:
         listProducts.append(product.serialize())
-    
+
     app.logger.info(len(listProducts))
 
     return jsonify(listProducts), status.HTTP_200_OK
 
-    
+
 ######################################################################
 # R E A D   A   P R O D U C T
 ######################################################################
@@ -158,6 +155,7 @@ def get_products(product_id):
 # U P D A T E   A   P R O D U C T
 ######################################################################
 
+
 @app.route("/products/<product_id>", methods=["PUT"])
 def update_products(product_id):
     """
@@ -168,7 +166,7 @@ def update_products(product_id):
     product = Product.find(product_id)
     if product is None:
         abort(status.HTTP_404_NOT_FOUND, f"Product with id ={product_id} not found")
-    
+
     check_content_type("application/json")
     product.deserialize(request.get_json())
     product.id = product_id
@@ -176,11 +174,11 @@ def update_products(product_id):
     message = product.serialize()
     return jsonify(message), status.HTTP_200_OK
 
-    
 
 ######################################################################
 # D E L E T E   A   P R O D U C T
 ######################################################################
+
 
 @app.route("/products/<product_id>", methods=["DELETE"])
 def delete_products(product_id):
