@@ -209,8 +209,8 @@ class TestProductRoutes(TestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         response = self.client.get(f"{BASE_URL}/{test_product.id}")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertTrue(self.get_product_count()<currentCount)
-        
+        self.assertTrue(self.get_product_count() < currentCount)
+
     def test_list_all_products(self):
         """ It should list all the products """
         self._create_products(5)
@@ -275,7 +275,6 @@ class TestProductRoutes(TestCase):
 
         for product in data:
             self.assertEqual(product["available"], test_available)
-
 
     ######################################################################
     # Utility functions
